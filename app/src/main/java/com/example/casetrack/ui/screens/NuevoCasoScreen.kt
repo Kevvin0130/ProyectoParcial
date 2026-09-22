@@ -15,13 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.casetrack.Data.CasoEntity
+import com.example.casetrack.Logic.CasoViewModel
 import com.example.casetrack.Model.Caso
 import com.example.casetrack.Model.EstadoCaso
 import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NuevoCasoScreen() {
+fun NuevoCasoScreen(viewModel: CasoViewModel, modifier: Modifier = Modifier) {
     var casoGuardado by remember {
         mutableStateOf<Caso?>(null)
     } //El Caso? significa que puede ser null. Al principio:casoGuardado = null, porque todavía no hemos guardado ningún caso. Después de pulsar Guardar:casoGuardado = nuevoCaso
@@ -52,13 +54,13 @@ fun NuevoCasoScreen() {
         }
         Button(
             onClick = {
-                val casoGuardado = Caso(
-                    titulo = titulo,
-                    descripcion = descripcion,
-                    fecha = LocalDate.now(),
-                    estado = EstadoCaso.ABIERTO,
-                    hallazgos = emptyList(),
-                    evidencias = emptyList()
+                viewModel.guardarCaso( //Estamos creando un objeto CasoEntity para que despues se lo pase al ViewModel
+                    CasoEntity(
+                        titulo = titulo,
+                        descripcion = descripcion,
+                        fecha = LocalDate.now().toString(),
+                        estado = "ABIERTO"
+                    )
                 )
             }
         ) {
