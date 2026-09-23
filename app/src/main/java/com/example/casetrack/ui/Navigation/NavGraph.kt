@@ -22,9 +22,7 @@ import com.example.casetrack.ui.screens.NuevoCasoScreen
 fun NavGraph(factory: CasoViewModelFactory) {
     val navController = rememberNavController()
 
-    val viewModel: CasoViewModel = viewModel(
-        factory = factory
-    )
+    val viewModel: CasoViewModel = viewModel(factory = factory)
 
     NavHost(navController = navController, startDestination = "inicio") {
         composable("inicio") {
@@ -35,25 +33,40 @@ fun NavGraph(factory: CasoViewModelFactory) {
                 detalleCasos = { navController.navigate("detalles") },
                 casosTerminados = { navController.navigate("finalizado") }
             )
-
         }
 
         composable("buscar") {
-            CasosScreen(viewModel = viewModel)
+            CasosScreen(
+                viewModel = viewModel,
+                alSeleccionarCaso = { caso ->
+                    viewModel.seleccionarCaso(caso)
+                    navController.navigate("detalleCaso")
+                }
+            )
         }
         composable("registro") {
             NuevoCasoScreen(viewModel = viewModel)
         }
 
-        composable("detalles"){
+        composable("detalles") {
             EstadisticasCasosScreen(viewModel = viewModel)
         }
         composable("finalizado") {
-            CasosCerradosScreen()
+            CasosCerradosScreen(
+                viewModel = viewModel,
+                alSeleccionarCaso = { caso ->
+                    viewModel.seleccionarCaso(caso)
+                    navController.navigate("detalleCaso")
+                }
+            )
         }
 
         composable("detalleCaso") {
-            DetalleCasoScreen(viewModel = viewModel)
+            DetalleCasoScreen(
+                viewModel = viewModel,
+                alVolver = { navController.popBackStack() },
+                alEliminarCaso = { navController.popBackStack() }
+            )
         }
     }
 }

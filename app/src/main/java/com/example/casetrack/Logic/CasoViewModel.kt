@@ -5,35 +5,89 @@ import androidx.lifecycle.viewModelScope
 import com.example.casetrack.Data.CasoEntity
 import com.example.casetrack.Data.CasoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CasoViewModel(
-    private val repository: CasoRepository //Aca se declara que para que exista un CasoViewModel, necesitamos recibir un CasoRepository
+    private val repository: CasoRepository
 ) : ViewModel() {
+
     private val _casos = MutableStateFlow<List<CasoEntity>>(emptyList())
-    //StateFlow sirve para representar un estado que puede cambiar y que otras partes de la aplicación pueden observar. emptylist comienza con la lista vacia
-    //List<CasoEntity> La información que vamos a guardar aquí será una lista de objetos CasoEntity
     val casos: StateFlow<List<CasoEntity>> = _casos
-    //Aquí creamos otra referencia al mismo estado, pero lo mostramos como StateFlow no como MutableStateFlow
-    //Por lo tanto, las pantallas pueden observarlo, pero no deberían modificarlo directamente.
+
+    // ---- Busqueda ----
+    private val _busqueda = MutableStateFlow("")
+    val busqueda: StateFlow<String> = _busqueda
+
+    fun actualizarBusqueda(texto: String) {
+        _busqueda.value = texto
+    }
+
+    // Se recalcula sola cada vez que cambian los casos o el texto buscado.
+    val casosFiltrados: StateFlow<List<CasoEntity>> =
+        combine(_casos, _busqueda) { listaCasos, textoBusqueda ->
+            if (textoBusqueda.isBlank()) {
+                listaCasos
+            } else {
+                listaCasos.filter { caso ->
+                    caso.titulo.contains(textoBusqueda, ignoreCase = true) ||
+                            caso.descripcion.contains(textoBusqueda, ignoreCase = true)
+                }
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val _casoSeleccionado = MutableStateFlow<CasoEntity?>(null)
     val casoSeleccionado: StateFlow<CasoEntity?> = _casoSeleccionado
+
     fun seleccionarCaso(caso: CasoEntity) {
         _casoSeleccionado.value = caso
     }
-    fun guardarCaso(caso: CasoEntity) { //Esta funcion recibe un caso y se encarga de iniciar el proceso para guardarlo
+
+    fun guardarCaso(caso: CasoEntity) {
         viewModelScope.launch {
             repository.insertarCaso(caso)
-        } //Este launch ejecuta esta operación de guardado sin bloquear la interfaz, a esto se le conoce como una corrutina
-    }
-    fun obtenerCasos() {
-        viewModelScope.launch { //launch significa que vamos a ejecutar una tarea que puede tardar sin bloquear la interfaz. Porque consultar una base de datos es una operación que no queremos hacer bloqueando la pantalla
-            _casos.value = repository.obtenerCasos() //Esta parte es muy importante ya que Repository nos da los casos."
-            // El Repository hace: casoDao.obtenerCasos() Y el DAO ejecuta: SELECT * FROM casos. Es decir recibimos un list
+            obtenerCasos()
         }
     }
+
+    fun obtenerCasos() {
+        viewModelScope.launch {
+            _casos.value = repository.obtenerCasos()
+        }
+    }
+
+    // ---- Editar caso (titulo, descripcion, fecha) ----
+    fun editarCaso(caso: CasoEntity, nuevoTitulo: String, nuevaDescripcion: String, nuevaFecha: String) {
+        if (!CasoValidator.casoValido(nuevoTitulo, nuevaDescripcion)) return
+        val casoActualizado = caso.copy(
+            titulo = nuevoTitulo,
+            descripcion = nuevaDescripcion,
+            fecha = nuevaFecha
+        )
+        viewModelScope.launch {
+            repository.actualizarCaso(casoActualizado)
+            _casoSeleccionado.value = casoActualizado
+            obtenerCasos()
+        }
+    }
+
+    // ---- Eliminar caso ----
+    fun eliminarCaso(caso: CasoEntity, alTerminar: () -> Unit = {}) {
+        viewModelScope.launch {
+            repository.eliminarCaso(caso)
+            _casoSeleccionado.value = null
+            obtenerCasos()
+            alTerminar()
+        }
+    }
+
     // ---- Hallazgos y evidencias ----
     fun agregarHallazgo(caso: CasoEntity, hallazgo: String) {
         if (hallazgo.isBlank()) return
@@ -44,9 +98,20 @@ class CasoViewModel(
             obtenerCasos()
         }
     }
+
     fun agregarEvidencia(caso: CasoEntity, evidencia: String) {
         if (evidencia.isBlank()) return
         val casoActualizado = caso.copy(evidencias = caso.evidencias + evidencia)
+        viewModelScope.launch {
+            repository.actualizarCaso(casoActualizado)
+            _casoSeleccionado.value = casoActualizado
+            obtenerCasos()
+        }
+    }
+
+    // ---- Conclusion ----
+    fun actualizarConclusion(caso: CasoEntity, conclusion: String) {
+        val casoActualizado = caso.copy(conclusion = conclusion)
         viewModelScope.launch {
             repository.actualizarCaso(casoActualizado)
             _casoSeleccionado.value = casoActualizado

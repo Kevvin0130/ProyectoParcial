@@ -11,3 +11,7 @@ val Blanco = Color(0xFFFFFFFF)
 
 val VerdeCaso = Color(0xFF15803D)
 val AmbarCaso = Color(0xFFD97706)
+val RojoCaso = Color(0xFFB91C1C)
+val AzulCaso = Color(0xFF2563EB)
+
+val TextoSecundario = Color(0xFF64748B)

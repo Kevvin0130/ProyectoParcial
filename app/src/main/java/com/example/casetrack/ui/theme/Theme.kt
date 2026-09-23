@@ -7,15 +7,19 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AzulPetroleo,
-    secondary = Turquesa,
-    tertiary = AmbarCaso
+    primary = Turquesa,
+    secondary = AmbarCaso,
+    tertiary = VerdeCaso,
+    background = AzulOscuro,
+    surface = AzulOscuro
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = AzulPetroleo,
     secondary = Turquesa,
-    tertiary = AmbarCaso
+    tertiary = AmbarCaso,
+    background = FondoClaro,
+    surface = Blanco
 )
 
 @Composable
@@ -24,7 +28,6 @@ fun CasetrackTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-
     val colorScheme = when {
         darkTheme -> DarkColorScheme
         else -> LightColorScheme

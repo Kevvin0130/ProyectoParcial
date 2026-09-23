@@ -22,5 +22,8 @@ data class CasoEntity( //Se usa un data class ya que está pensado justamente pa
     val hallazgos: List<String> = emptyList(),
 
     //Regla minima: "Registrar hallazgos y evidencias"
-    val evidencias: List<String> = emptyList()
+    val evidencias: List<String> = emptyList(),
+
+    // Regla minima: "Cada caso debe permitir registrar una conclusion."
+    val conclusion: String = ""
 )

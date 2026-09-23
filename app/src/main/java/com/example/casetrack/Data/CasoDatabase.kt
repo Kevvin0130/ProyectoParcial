@@ -8,8 +8,8 @@ import androidx.room.TypeConverters
 import com.example.casetrack.Data.CasoDao
 
 @Database(
-    entities = [CasoEntity::class], //Aca se especifica que la base de datos tiene la entidad CasoEntity
-    version = 2, //Subimos de 1 a 2 porque agregamos hallazgos y evidencias a CasoEntity
+    entities = [CasoEntity::class],
+    version = 3, // Subimos de 2 a 3 porque agregamos "conclusion" a CasoEntity
     exportSchema = false
 )
 @TypeConverters(Converters::class) //Le decimos a Room que use Converters para poder guardar List<String>
