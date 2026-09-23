@@ -16,58 +16,68 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.casetrack.Data.CasoEntity
+import com.example.casetrack.Logic.CasoValidator
 import com.example.casetrack.Logic.CasoViewModel
-import com.example.casetrack.Model.Caso
-import com.example.casetrack.Model.EstadoCaso
 import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NuevoCasoScreen(viewModel: CasoViewModel, modifier: Modifier = Modifier) {
-    var casoGuardado by remember {
-        mutableStateOf<Caso?>(null)
-    } //El Caso? significa que puede ser null. Al principio:casoGuardado = null, porque todavía no hemos guardado ningún caso. Después de pulsar Guardar:casoGuardado = nuevoCaso
     var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
+    var guardadoExitoso by remember { mutableStateOf(false) }
+    var mostrarError by remember { mutableStateOf(false) } //true si el usuario intento guardar con campos vacios
 
     Column (modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Column(horizontalAlignment = Alignment.Start) {
-        Text("Titulo")
+            Text("Titulo")
             TextField(
                 value = titulo,
                 onValueChange = { nuevoTexto ->
-                titulo = nuevoTexto
+                    titulo = nuevoTexto
                 },
                 label = {
-                Text("Título")
+                    Text("Título")
                 }
             )
         }
         Column(horizontalAlignment = Alignment.Start) {
-        Text("Desripcion")
+            Text("Desripcion")
             TextField(
                 value = descripcion,
                 onValueChange = { nuevoTexto ->
-                descripcion = nuevoTexto
-                }//Aca en este onValueChange lo que hacemos es ir actualizando el text field y mostrar lo que el usuario va escribiendo
+                    descripcion = nuevoTexto
+                }
             )
         }
         Button(
             onClick = {
-                viewModel.guardarCaso( //Estamos creando un objeto CasoEntity para que despues se lo pase al ViewModel
-                    CasoEntity(
-                        titulo = titulo,
-                        descripcion = descripcion,
-                        fecha = LocalDate.now().toString(),
-                        estado = "ABIERTO"
+                if (CasoValidator.casoValido(titulo, descripcion)) {
+                    viewModel.guardarCaso(
+                        CasoEntity(
+                            titulo = titulo,
+                            descripcion = descripcion,
+                            fecha = LocalDate.now().toString(),
+                            estado = "ABIERTO"
+                        )
                     )
-                )
+                    titulo = ""
+                    descripcion = ""
+                    guardadoExitoso = true
+                    mostrarError = false
+                } else {
+                    mostrarError = true
+                    guardadoExitoso = false
+                }
             }
         ) {
             Text("Guardar")
         }
-        if (casoGuardado != null) {
+        if (guardadoExitoso) {
             Text("Caso creado correctamente")
+        }
+        if (mostrarError) {
+            Text("El título y la descripción no pueden estar vacíos")
         }
     }
 }

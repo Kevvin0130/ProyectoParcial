@@ -16,5 +16,11 @@ data class CasoEntity( //Se usa un data class ya que está pensado justamente pa
 
     val fecha: String,
 
-    val estado: String
+    val estado: String,
+
+    //Regla minima: "El sistema debe permitir registrar entrevistas y sus principales hallazgos."
+    val hallazgos: List<String> = emptyList(),
+
+    //Regla minima: "Registrar hallazgos y evidencias"
+    val evidencias: List<String> = emptyList()
 )
